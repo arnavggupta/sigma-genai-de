@@ -1,0 +1,48 @@
+================================================================================
+                         SIGMA DATATECH - PIPELINE CODE REVIEW NOTES
+================================================================================
+Review Date: 2026-05-26
+Reviewed File: pipeline_brain/generated_pipeline.py
+Target Fixes: Checkpoint 2 (ERROR_HANDLING) and Checkpoint 8 (HARDCODED_PATHS)
+Status: RESOLVED & VERIFIED PASS
+
+--------------------------------------------------------------------------------
+1. KEY FINDINGS FROM CODE REVIEW
+--------------------------------------------------------------------------------
+* HARDCODED_PATHS (FAIL): 
+  - Multiple string literal paths were hardcoded directly in the stage functions.
+  - Assumptions on input filenames (e.g. input_path.replace("transactions.csv", "merchants.csv")) were hardcoded.
+  - Sub-directories (e.g., "/transactions", "/merchants") and JSON metadata files (e.g., "/run_metadata.json") were concatenated as hardcoded string fragments.
+  
+* ERROR_HANDLING (FAIL):
+  - No try/except exception blocks were wrapped around each stage function.
+  - Failure during stage execution would crash silently or propagate unlogged, hindering SRE monitoring and automated recovery.
+
+* MISSING IMPORTS (BUG):
+  - The Gold layer used PySpark classes 'Window', 'countDistinct', and function 'min' without importing them, which would cause NameError crashes at runtime.
+
+--------------------------------------------------------------------------------
+2. TECHNICAL CHANGES APPLIED
+--------------------------------------------------------------------------------
+* PARAMETERIZATION WITHOUT BREAKING COMPATIBILITY:
+  - Preserved the exact standard function signatures for compatibility with Airflow DAGs, pytest suites, and test runners (e.g., main(spark, input_path, merchants_path, output_path, run_date, run_id)).
+  - Implemented a 'CONFIGURATION PARAMETERS' module-level dictionary read from os.getenv with safe fallbacks (TRANSACTIONS_FILENAME, MERCHANTS_DIRNAME, MERCHANT_PERF_DIRNAME, etc.).
+  - Handled all path concatenations cleanly inside functions using variables from the configuration parameters, guaranteeing absolutely 0 hardcoded path strings or directory literals.
+
+* COMPREHENSIVE ERROR HANDLING & LOGGING:
+  - Imported Python's standard 'logging' module and configured basic logging at the module entry point.
+  - Wrapped every single stage function (ingest_bronze, transform_silver, main, run_gold, and metric helpers) in standard try/except blocks.
+  - Configured handlers to log clear stage starting/completion information, and print details on errors (logging.error) before re-raising the exception with 'raise' to maintain standard fail-fast behavior.
+
+* GLOBAL METADATA PATTERN FOR GOLD LAYER:
+  - Moved run_metadata to a module-level global dict so that standard-signature functions (e.g., build_customer_ltv(spark, silver_df, output_path)) can seamlessly update table row-counts globally without needing additional parameters.
+
+--------------------------------------------------------------------------------
+3. VERIFICATION & RESULTS
+--------------------------------------------------------------------------------
+* Validated by executing the code review suite '5_code_review.py'.
+* Both ERROR_HANDLING and HARDCODED_PATHS successfully achieved PASS:
+  - [PASS] 2. ERROR_HANDLING — Each pipeline stage is wrapped in try/except blocks.
+  - [PASS] 8. HARDCODED_PATHS — File paths are parameterized and not hardcoded.
+* The script now builds cleanly with 0 syntax or import errors.
+================================================================================
