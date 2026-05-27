@@ -1,6 +1,10 @@
 {
   "sprint": "testing_sprint",
+<<<<<<< HEAD
   "generated_at": "2026-05-27T10:22:49.917732+00:00",
+=======
+  "generated_at": "2026-05-27T09:58:19.649640+00:00",
+>>>>>>> b8ad18c (day8 Done)
   "models_used": {
     "pytest_suite": "amazon.nova-pro-v1:0",
     "ge_suite": "amazon.nova-lite-v1:0"
@@ -8,6 +12,7 @@
   "token_usage": {
     "step1_pytest": {
       "input": 1821,
+<<<<<<< HEAD
       "output": 1028
     },
     "step2_ge": {
@@ -16,19 +21,37 @@
     },
     "total_input": 2407,
     "total_output": 1813
+=======
+      "output": 1379
+    },
+    "step2_ge": {
+      "input": 586,
+      "output": 790
+    },
+    "total_input": 2407,
+    "total_output": 2169
+>>>>>>> b8ad18c (day8 Done)
   },
   "pytest": {
     "file": "devops_brain/test_pipeline.py",
     "tests_generated": 9,
+<<<<<<< HEAD
     "passed": 9,
     "failed": 0,
     "errors": 0,
     "all_green": true
+=======
+    "passed": 0,
+    "failed": 0,
+    "errors": 2,
+    "all_green": false
+>>>>>>> b8ad18c (day8 Done)
   },
   "great_expectations": {
     "file": "devops_brain/ge_expectations.json",
     "json_valid": true,
     "duckdb_checks": {
+<<<<<<< HEAD
       "checks": [
         {
           "check": "row_count between 10 and 30",
@@ -87,4 +110,10 @@
     }
   },
   "student_judgment": "test_null_transaction_id_filtered"
+=======
+      "error": "DuckDB not installed \u2014 run: pip install duckdb"
+    }
+  },
+  "student_judgment": "this ia test bug i will fix by ensuring the path is placed before the import statement"
+>>>>>>> b8ad18c (day8 Done)
 }

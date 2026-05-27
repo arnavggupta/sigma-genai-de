@@ -8,7 +8,11 @@
         "max_value": 30
       },
       "meta": {
+<<<<<<< HEAD
         "notes": "Ensure the row count is within the expected range after Bronze -> Silver transform."
+=======
+        "notes": "Ensure the number of rows in the silver_transactions table is between 10 and 30."
+>>>>>>> b8ad18c (day8 Done)
       }
     },
     {
@@ -17,7 +21,11 @@
         "column": "transaction_id"
       },
       "meta": {
+<<<<<<< HEAD
         "notes": "All transaction_ids must be non-null."
+=======
+        "notes": "Ensure transaction_id is not null."
+>>>>>>> b8ad18c (day8 Done)
       }
     },
     {
@@ -26,7 +34,11 @@
         "column": "amount"
       },
       "meta": {
+<<<<<<< HEAD
         "notes": "All amounts must be non-null."
+=======
+        "notes": "Ensure amount is not null."
+>>>>>>> b8ad18c (day8 Done)
       }
     },
     {
@@ -35,7 +47,11 @@
         "column": "status"
       },
       "meta": {
+<<<<<<< HEAD
         "notes": "All statuses must be non-null."
+=======
+        "notes": "Ensure status is not null."
+>>>>>>> b8ad18c (day8 Done)
       }
     },
     {
@@ -44,7 +60,11 @@
         "column": "transaction_date"
       },
       "meta": {
+<<<<<<< HEAD
         "notes": "All transaction dates must be non-null."
+=======
+        "notes": "Ensure transaction_date is not null."
+>>>>>>> b8ad18c (day8 Done)
       }
     },
     {
@@ -54,7 +74,11 @@
         "min_value": 0
       },
       "meta": {
+<<<<<<< HEAD
         "notes": "All amounts must be greater than or equal to 0."
+=======
+        "notes": "Ensure amount is greater than or equal to 0."
+>>>>>>> b8ad18c (day8 Done)
       }
     },
     {
@@ -63,27 +87,52 @@
         "column": "transaction_id"
       },
       "meta": {
+<<<<<<< HEAD
         "notes": "No duplicate transaction_ids should exist."
+=======
+        "notes": "Ensure transaction_id is unique."
+>>>>>>> b8ad18c (day8 Done)
       }
     },
     {
       "expectation_type": "expect_column_values_to_be_in_set",
       "kwargs": {
         "column": "status",
+<<<<<<< HEAD
         "value_set": ["COMPLETED", "FAILED", "PENDING"]
       },
       "meta": {
         "notes": "Status must be one of the allowed values: COMPLETED, FAILED, PENDING."
+=======
+        "value_set": [
+          "COMPLETED",
+          "FAILED",
+          "PENDING"
+        ]
+      },
+      "meta": {
+        "notes": "Ensure status is one of COMPLETED, FAILED, or PENDING."
+>>>>>>> b8ad18c (day8 Done)
       }
     },
     {
       "expectation_type": "expect_column_values_to_be_in_set",
       "kwargs": {
         "column": "quality_flag",
+<<<<<<< HEAD
         "value_set": ["CLEAN", "UNMATCHED"]
       },
       "meta": {
         "notes": "Quality flag must be either CLEAN or UNMATCHED."
+=======
+        "value_set": [
+          "CLEAN",
+          "UNMATCHED"
+        ]
+      },
+      "meta": {
+        "notes": "Ensure quality_flag is either CLEAN or UNMATCHED."
+>>>>>>> b8ad18c (day8 Done)
       }
     },
     {
@@ -94,7 +143,11 @@
         "max_value": 5000
       },
       "meta": {
+<<<<<<< HEAD
         "notes": "The mean of the amounts should be between 100 and 5000."
+=======
+        "notes": "Ensure the mean of amount is between 100 and 5000."
+>>>>>>> b8ad18c (day8 Done)
       }
     }
   ],

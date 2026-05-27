@@ -4,6 +4,7 @@
       "name": "data_freshness_breach",
       "condition": "Pipeline has not run in more than 24 hours",
       "threshold": "24",
+<<<<<<< HEAD
       "message": "The data pipeline has not run in over 24 hours, leading to stale data.",
       "recommended_action": "Investigate and restart the pipeline immediately."
     },
@@ -20,11 +21,30 @@
       "threshold": "17, 25",
       "message": "The row count is outside the expected bounds of 17 to 25, affecting data completeness.",
       "recommended_action": "Investigate the cause of the row count being out of bounds."
+=======
+      "message": "Data freshness has breached SLO. Pipeline has not run in more than 24 hours.",
+      "recommended_action": "Investigate and restart the pipeline immediately."
+    },
+    {
+      "name": "quality_threshold_breach",
+      "condition": "Data quality percentage is below 99.9%",
+      "threshold": "99.9",
+      "message": "Data quality has breached SLO. Quality percentage is below 99.9%.",
+      "recommended_action": "Investigate and resolve data quality issues immediately."
+    },
+    {
+      "name": "row_count_out_of_bounds",
+      "condition": "Row count is outside the range of 17 to 25",
+      "threshold": "17, 25",
+      "message": "Row count is outside the SLO bounds. Current count is outside the range of 17 to 25.",
+      "recommended_action": "Investigate the cause of the row count being outside the SLO bounds."
+>>>>>>> b8ad18c (day8 Done)
     }
   ],
   "WARNING": [
     {
       "name": "runtime_approaching_limit",
+<<<<<<< HEAD
       "condition": "Pipeline runtime is approaching the 120-minute limit",
       "threshold": "120",
       "message": "The pipeline runtime is approaching the 120-minute limit, which may delay the dashboard update.",
@@ -36,18 +56,37 @@
       "threshold": "99.85",
       "message": "Data quality is slightly below the 99.9% threshold, which may lead to minor inaccuracies.",
       "recommended_action": "Monitor data quality and identify the cause of the slight drop."
+=======
+      "condition": "Pipeline runtime is approaching 120 minutes",
+      "threshold": "120",
+      "message": "Pipeline runtime is approaching the SLO limit of 120 minutes.",
+      "recommended_action": "Monitor the pipeline runtime and optimize if necessary."
+    },
+    {
+      "name": "quality_slightly_below_threshold",
+      "condition": "Data quality percentage is slightly below 99.9%",
+      "threshold": "99.85",
+      "message": "Data quality is slightly below the SLO threshold of 99.9%. Current quality is 99.85%.",
+      "recommended_action": "Investigate and address the slight dip in data quality."
+>>>>>>> b8ad18c (day8 Done)
     },
     {
       "name": "merchant_failure_rate_spike",
       "condition": "One merchant's failure rate spikes above 30%",
       "threshold": "30",
+<<<<<<< HEAD
       "message": "A merchant's failure rate has spiked above 30%, which may indicate a processing issue.",
       "recommended_action": "Investigate the cause of the failure rate spike for the affected merchant."
+=======
+      "message": "One merchant's failure rate has spiked above 30%.",
+      "recommended_action": "Investigate and resolve the issue with the merchant's data processing."
+>>>>>>> b8ad18c (day8 Done)
     }
   ],
   "INFO": [
     {
       "name": "new_payment_method_detected",
+<<<<<<< HEAD
       "condition": "A new payment method is detected in the data",
       "threshold": "new_payment_method",
       "message": "A new payment method has been detected in the data.",
@@ -59,6 +98,19 @@
       "threshold": "17, 25",
       "message": "The daily row count is near the bounds of 17 to 25, but within acceptable limits.",
       "recommended_action": "Monitor the row count to ensure it remains within the bounds."
+=======
+      "condition": "A new payment method is seen in the data",
+      "threshold": "N/A",
+      "message": "A new payment method has been detected in the data.",
+      "recommended_action": "Log the new payment method for future reference."
+    },
+    {
+      "name": "row_count_near_bounds",
+      "condition": "Daily row count is near the SLO bounds",
+      "threshold": "17, 25",
+      "message": "Daily row count is near the SLO bounds of 17 to 25.",
+      "recommended_action": "Monitor the row count to ensure it remains within the SLO bounds."
+>>>>>>> b8ad18c (day8 Done)
     }
   ]
 }

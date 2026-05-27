@@ -1,6 +1,10 @@
 {
   "sprint": "ci_slo",
+<<<<<<< HEAD
   "generated_at": "2026-05-27T15:55:50.769960",
+=======
+  "generated_at": "2026-05-27T16:10:36.252538",
+>>>>>>> b8ad18c (day8 Done)
   "models_used": {
     "workflow_generation": "amazon.nova-pro-v1:0",
     "slo_generation": "amazon.nova-pro-v1:0",
@@ -9,6 +13,7 @@
   "token_usage": {
     "ci_workflow": {
       "input": 469,
+<<<<<<< HEAD
       "output": 464
     },
     "slo_definitions": {
@@ -18,6 +23,17 @@
     "alert_rules": {
       "input": 567,
       "output": 727
+=======
+      "output": 468
+    },
+    "slo_definitions": {
+      "input": 473,
+      "output": 297
+    },
+    "alert_rules": {
+      "input": 555,
+      "output": 707
+>>>>>>> b8ad18c (day8 Done)
     }
   },
   "files_generated": [
@@ -33,5 +49,9 @@
     "WARNING": 3,
     "INFO": 2
   },
+<<<<<<< HEAD
   "student_judgment": "yes agree"
+=======
+  "student_judgment": "No, I dont agree because the data freshness  is set to 24 hours that is too late so maybe we can set it to 6 hours"
+>>>>>>> b8ad18c (day8 Done)
 }
