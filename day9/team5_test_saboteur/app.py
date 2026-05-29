@@ -4,12 +4,20 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "..", "shared"))
 import streamlit as st
 import json
 import time
+<<<<<<< HEAD
 from bedrock_helper import call_nova_lite, call_nova_pro, call_mistral, call_llama3
+=======
+from bedrock_helper import call_nova_lite, call_nova_pro
+>>>>>>> 4f8fb58 (day_10 things)
 from sample_data import TRANSACTIONS_CLEAN, TRANSACTIONS_DIRTY, MERCHANTS
 
 # --- UI Setup ---
 st.set_page_config(page_title="Team 5: Test Saboteur", layout="wide", page_icon="🕵️‍♂️")
 
+<<<<<<< HEAD
+=======
+# Custom CSS for Premium Design
+>>>>>>> 4f8fb58 (day_10 things)
 st.markdown("""
 <style>
     .round-header { font-size: 24px; font-weight: bold; color: #E0E0E0; margin-top: 20px; border-bottom: 2px solid #4CAF50; padding-bottom: 5px; }
@@ -41,11 +49,18 @@ with st.sidebar:
     
     st.divider()
     st.markdown("### 🪙 Tokens Consumed")
+<<<<<<< HEAD
     st.caption("Live tracking based on actual API payloads.")
     t1 = st.session_state.get('tokens_r1', 0)
     t2_llama = st.session_state.get('tokens_llama', 0)
     t2_mistral = st.session_state.get('tokens_mistral', 0)
     t2_nova = st.session_state.get('tokens_nova', 0)
+=======
+    t1 = 1245 if 'generated_tests' in st.session_state else 0
+    t2_llama = 850 if 'critique_run' in st.session_state else 0
+    t2_mistral = 720 if 'critique_run' in st.session_state else 0
+    t2_nova = 410 if 'critique_run' in st.session_state else 0
+>>>>>>> 4f8fb58 (day_10 things)
     
     st.metric("Round 1: Nova Pro", f"{t1:,}")
     st.metric("Round 2: Llama 3 70B", f"{t2_llama:,}")
@@ -98,6 +113,7 @@ def transform_bronze_to_silver(bronze_rows, merchants_dict):
     return silver_rows
     ''', language="python")
 
+<<<<<<< HEAD
 # --- LIVE BEDROCK HELPERS ---
 def live_generate_tests():
     prompt = """
@@ -177,6 +193,64 @@ if st.button("🚀 Generate Test Suite with Nova Pro (Live API Call)"):
             st.error(f"Failed to generate tests. Check AWS credentials. {e}")
 
 if 'generated_tests' in st.session_state and not st.button("🚀 Generate Test Suite with Nova Pro (Live API Call)", key="dummy"):
+=======
+# --- MOCK & SAFE BEDROCK CALLS ---
+SABOTEUR_TESTS = '''
+def test_clean_data(sample_data):
+    # STRONG: Tests basic functionality
+    output = transform_bronze_to_silver(sample_data, merchants)
+    assert len(output) > 0
+
+def test_deduplication(sample_data):
+    # SABOTEUR: Tautology assertion
+    output = transform_bronze_to_silver(sample_data, merchants)
+    unique_ids = set()
+    duplicates_found = 0
+    for row in output:
+        if row["transaction_id"] in unique_ids:
+            duplicates_found += 1
+        unique_ids.add(row["transaction_id"])
+    
+    # Flaw: This is always true! (>= 0)
+    assert duplicates_found >= 0
+
+def test_merchant_enrichment(sample_data):
+    # SABOTEUR: Empty loop vulnerability
+    output = transform_bronze_to_silver(sample_data, merchants)
+    
+    # Flaw: If output is [], the loop is skipped and test passes silently!
+    for row in output:
+        assert row["merchant_name"] is not None
+
+def test_pipeline_safety(sample_data):
+    # SABOTEUR: Empty except block
+    try:
+        transform_bronze_to_silver(sample_data, merchants)
+    except Exception:
+        # Flaw: If it doesn't raise an error when it should, it passes anyway!
+        pass
+'''
+
+def safe_nova_pro(prompt):
+    try:
+        return call_nova_pro("You are an expert Python QA engineer.", prompt)
+    except Exception:
+        time.sleep(1.5)
+        return SABOTEUR_TESTS
+
+# --- ROUND 1 ---
+st.markdown("<div class='round-header'>Round 1: AI Test Generator (Nova Pro)</div>", unsafe_allow_html=True)
+if st.button("🚀 Generate Test Suite with Nova Pro"):
+    with st.spinner("Nova Pro is analyzing the pipeline and writing tests..."):
+        prompt = "Generate 4 pytest functions for the pipeline. Include 3 saboteur tests (tautology, empty loop, empty except block)."
+        tests = safe_nova_pro(prompt)
+        st.session_state['generated_tests'] = tests
+        st.success("Test Suite Generated Successfully! (All CI checks would pass)")
+        st.code(tests, language="python")
+        st.rerun()
+
+if 'generated_tests' in st.session_state and not st.button("🚀 Generate Test Suite with Nova Pro", key="dummy"):
+>>>>>>> 4f8fb58 (day_10 things)
     st.success("Test Suite Generated Successfully! (All CI checks would pass)")
     st.code(st.session_state['generated_tests'], language="python")
 
@@ -185,6 +259,7 @@ if 'generated_tests' in st.session_state and not st.button("🚀 Generate Test S
 st.markdown("<div class='round-header'>Round 2: AI Test Critic (The 3-Model Battle)</div>", unsafe_allow_html=True)
 st.markdown("To prove that different AI brains interpret code differently, we pitted three completely different AI families against each other for the Code Review.")
 
+<<<<<<< HEAD
 if st.button("🤖 Run 3-Critic Code Review (Live API Calls)"):
     if 'generated_tests' not in st.session_state:
         st.error("Please run Round 1 first.")
@@ -204,10 +279,19 @@ if st.button("🤖 Run 3-Critic Code Review (Live API Calls)"):
             st.session_state['critique_nova'] = critique_nova
             st.session_state['tokens_nova'] = t_nova
             
+=======
+if st.button("🤖 Run 3-Critic Code Review"):
+    if 'generated_tests' not in st.session_state:
+        st.error("Please run Round 1 first.")
+    else:
+        with st.spinner("All 3 models are reviewing the code..."):
+            time.sleep(2)
+>>>>>>> 4f8fb58 (day_10 things)
             st.session_state['critique_run'] = True
             st.rerun()
 
 if 'critique_run' in st.session_state:
+<<<<<<< HEAD
     # Determine overall confidence averages dynamically
     def get_avg_conf(critique):
         try:
@@ -220,6 +304,8 @@ if 'critique_run' in st.session_state:
     c_mistral = get_avg_conf(st.session_state.get('critique_mistral', []))
     c_nova = get_avg_conf(st.session_state.get('critique_nova', []))
 
+=======
+>>>>>>> 4f8fb58 (day_10 things)
     tab1, tab2, tab3 = st.tabs([
         "🦙 Critic 1: Llama 3 70B (Meta)", 
         "🌪️ Critic 2: Mistral Large (Mistral AI)", 
@@ -227,6 +313,7 @@ if 'critique_run' in st.session_state:
     ])
     
     with tab1:
+<<<<<<< HEAD
         st.markdown(f"### 🦙 Meta Llama 3 70B Instruct (Overall Confidence: {c_llama})")
         st.caption("Currently one of the smartest open-source models in the world. Excellent at deep reasoning and logic puzzles.")
         st.table(st.session_state['critique_llama'])
@@ -240,6 +327,42 @@ if 'critique_run' in st.session_state:
         st.markdown(f"### ⚡ Amazon Nova Lite (Overall Confidence: {c_nova})")
         st.caption("The smaller, cheaper, faster sibling of Nova Pro. The 'budget' option for automated code reviews.")
         st.table(st.session_state['critique_nova'])
+=======
+        st.markdown("### 🦙 Meta Llama 3 70B Instruct (Overall Confidence: 90%)")
+        st.caption("Currently one of the smartest open-source models in the world. Excellent at deep reasoning and logic puzzles.")
+        critique_llama = [
+            {"Test": "test_clean_data", "Score": "STRONG", "Confidence": "95%", "Reasoning": "Standard verification of output shape."},
+            {"Test": "test_deduplication", "Score": "WEAK", "Confidence": "85%", "Reasoning": "The assertion `duplicates_found >= 0` is a tautology. It will mathematically always pass. Rewrite to `== 0`."},
+            {"Test": "test_merchant_enrichment", "Score": "STRONG", "Confidence": "90%", "Reasoning": "Iterates through all outputs to ensure critical fields are populated correctly."},
+            {"Test": "test_pipeline_safety", "Score": "WEAK", "Confidence": "92%", "Reasoning": "Empty except block. Should assert specific exception type."}
+        ]
+        st.table(critique_llama)
+        st.info("💡 **Insight:** The powerful reasoner caught the mathematical tautology! But... it STILL missed the empty loop vulnerability in the enrichment test.")
+        
+    with tab2:
+        st.markdown("### 🌪️ Mistral Large (Overall Confidence: 89%)")
+        st.caption("A powerful flagship model built by a French AI startup, known for being incredibly fast and highly optimized for coding tasks.")
+        critique_mistral = [
+            {"Test": "test_clean_data", "Score": "STRONG", "Confidence": "92%", "Reasoning": "Correct standard test."},
+            {"Test": "test_deduplication", "Score": "STRONG", "Confidence": "90%", "Reasoning": "Good use of sets to track uniqueness across the loop."},
+            {"Test": "test_merchant_enrichment", "Score": "STRONG", "Confidence": "94%", "Reasoning": "Solid idiomatic Python for asserting dictionary properties."},
+            {"Test": "test_pipeline_safety", "Score": "WEAK", "Confidence": "80%", "Reasoning": "Avoid bare except blocks."}
+        ]
+        st.table(critique_mistral)
+        st.warning("⚠️ **Insight:** The coding-optimized model saw correct python syntax and assumed the logic was sound. It missed BOTH Saboteurs.")
+        
+    with tab3:
+        st.markdown("### ⚡ Amazon Nova Lite (Overall Confidence: 99%)")
+        st.caption("The smaller, cheaper, faster sibling of Nova Pro. The 'budget' option for automated code reviews.")
+        critique_nova = [
+            {"Test": "test_clean_data", "Score": "STRONG", "Confidence": "99%", "Reasoning": "Looks good."},
+            {"Test": "test_deduplication", "Score": "STRONG", "Confidence": "99%", "Reasoning": "Deduplication logic is present."},
+            {"Test": "test_merchant_enrichment", "Score": "STRONG", "Confidence": "99%", "Reasoning": "Checks merchant fields."},
+            {"Test": "test_pipeline_safety", "Score": "STRONG", "Confidence": "99%", "Reasoning": "Handles errors safely."}
+        ]
+        st.table(critique_nova)
+        st.error("🚨 **Insight:** The budget model confidently approved completely broken tests with 99% certainty.")
+>>>>>>> 4f8fb58 (day_10 things)
 
 # --- ROUND 3 ---
 st.markdown("<div class='round-header'>Round 3: Your Audit (The Truth Machine)</div>", unsafe_allow_html=True)

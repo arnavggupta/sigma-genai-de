@@ -35,6 +35,7 @@ def call_nova_lite(system: str, user: str, max_tokens: int = 1000) -> str:
 
 def call_nova_pro(system: str, user: str, max_tokens: int = 1500) -> str:
     return _invoke("amazon.nova-pro-v1:0", system, user, max_tokens, temperature=0.2)
+<<<<<<< HEAD
 
 
 def call_llama3(system: str, user: str, max_tokens: int = 1000) -> str:
@@ -65,3 +66,5 @@ def call_mistral(system: str, user: str, max_tokens: int = 1000) -> str:
     )
     result = json.loads(response["body"].read())
     return result["outputs"][0]["text"]
+=======
+>>>>>>> 4f8fb58 (day_10 things)
