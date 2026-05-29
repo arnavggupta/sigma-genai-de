@@ -56,8 +56,9 @@ REGION        = "us-east-1"
 # ── Paths ─────────────────────────────────────────────────────────────────────
 SCRIPT_DIR      = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR      = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "output"))
-COMPETITIVE_DIR = OUTPUT_DIR   # all sprint outputs go to labs/output/
-CHALLENGE_PATH  = os.path.join(SCRIPT_DIR, "challenge_pipeline.py")
+COMPETITIVE_DIR  = OUTPUT_DIR   # all sprint outputs go to labs/output/
+DEVOPS_BRAIN_DIR = OUTPUT_DIR   # Day 8 artifacts (pipeline_ci.yml, slo_definitions.json, observability_report.json) live here
+CHALLENGE_PATH   = os.path.join(SCRIPT_DIR, "challenge_pipeline.py")
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
