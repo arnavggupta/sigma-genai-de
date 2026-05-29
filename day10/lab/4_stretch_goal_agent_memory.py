@@ -116,13 +116,19 @@ class HealingMemory:
         self.conn.commit()
 
     def _fingerprint(self, error: str) -> str:
-        """Generate a short hash of the error — strip temp file paths so the
-        same bug gets the same fingerprint across runs."""
-        import re
-        # Remove temp file paths — they change every run
-        cleaned = re.sub(r'File ".*?[\\/]([^\\/]+\.py)"', r'File "\1"', error)
-        lines = [l.strip() for l in cleaned.splitlines() if l.strip()]
-        key = " ".join(lines[-3:]) if len(lines) >= 3 else cleaned
+        """Stable fingerprint: exception message + the code line that caused it.
+        Ignores file paths and line numbers — both change across runs."""
+        lines = [l.strip() for l in error.splitlines() if l.strip()]
+        # Last line = exception type + message e.g. "KeyError: 'amounts'"
+        exception_line = lines[-1] if lines else error
+        # Find the actual code line (not File/path lines, not ^^^ markers)
+        code_lines = [l for l in lines
+                      if not l.startswith("File ")
+                      and not l.startswith("~")
+                      and not l.startswith("^")
+                      and not l.startswith("Traceback")]
+        code_context = code_lines[-2] if len(code_lines) >= 2 else ""
+        key = f"{exception_line} | {code_context}"
         return hashlib.md5(key.encode()).hexdigest()[:12]
 
     def lookup(self, error: str) -> dict | None:
