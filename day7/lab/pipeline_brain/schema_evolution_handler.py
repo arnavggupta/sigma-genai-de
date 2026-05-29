@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from typing import Dict, List, Tuple, Any
 from pyspark.sql import DataFrame
 from pyspark.sql.types import StructType, StructField, StringType, FloatType, IntegerType
@@ -77,3 +78,112 @@ def handle_drift(expected_schema: Dict[str, str], actual_schema: Dict[str, str],
             print(note)
     drift_report['decisions'] = decisions
     return drift_report
+=======
+from typing import Dict, List, Tuple, Union
+from pyspark.sql import DataFrame
+from pyspark.sql.types import StringType, FloatType, StructType, StructField
+
+def detect_schema_drift(expected_schema: Dict[str, str], actual_schema: Dict[str, str]) -> Dict[str, Union[Dict[str, str], List[str], Dict[str, Tuple[str, str]], str]]:
+    """
+    Detects schema drift between expected and actual schemas.
+
+    Args:
+        expected_schema (Dict[str, str]): The expected schema.
+        actual_schema (Dict[str, str]): The actual schema.
+
+    Returns:
+        Dict[str, Union[Dict[str, str], List[str], Dict[str, Tuple[str, str]], str]]: A report on the schema drift.
+    """
+    new_columns = {k: v for k, v in actual_schema.items() if k not in expected_schema}
+    removed_columns = {k: v for k, v in expected_schema.items() if k not in actual_schema}
+    type_changes = {k: (expected_schema[k], actual_schema[k]) for k in expected_schema if expected_schema[k]!= actual_schema.get(k, '')}
+
+    drift_severity = 'NONE'
+    if new_columns:
+        if any(actual_schema[col] not in ['string', 'float'] or expected_schema.get(col, '').lower()!= 'null' for col in new_columns):
+            drift_severity = 'HIGH'
+        else:
+            drift_severity = 'LOW'
+    if removed_columns:
+        drift_severity = 'BREAKING'
+
+    return {
+        'new_columns': new_columns,
+       'removed_columns': list(removed_columns.keys()),
+        'type_changes': type_changes,
+        'drift_severity': drift_severity
+    }
+
+def decide_action(drift_report: Dict[str, Union[Dict[str, str], List[str], Dict[str, Tuple[str, str]]]]) -> Dict[str, Dict[str, Union[str, str, str]]]:
+    """
+    Decides the action to take for each column based on the drift report.
+
+    Args:
+        drift_report (Dict[str, Union[Dict[str, str], List[str], Dict[str, Tuple[str, str]]]]): The drift report.
+
+    Returns:
+        Dict[str, Dict[str, Union[str, str, str]]]: A decision for each column.
+    """
+    decisions = {}
+    for col, dtype in drift_report['new_columns'].items():
+        if dtype =='string':
+            decisions[col] = {'action': 'ADD_TO_SCHEMA','reason': 'New nullable string column', 'risk_level': 'LOW'}
+        elif dtype == 'float':
+            decisions[col] = {'action': 'FLAG_ANOMALY','reason': 'New float column, could affect revenue calculations', 'risk_level': 'HIGH'}
+        else:
+            decisions[col] = {'action': 'ADD_TO_SCHEMA','reason': f'New column with type {dtype}', 'risk_level': 'LOW'}
+
+    for col in drift_report['removed_columns']:
+        decisions[col] = {'action': 'HALT','reason': 'Removed column, will break downstream queries', 'risk_level': 'BREAKING'}
+
+    return decisions
+
+def apply_schema_evolution(spark_df: DataFrame, decisions: Dict[str, Dict[str, Union[str, str, str]]], updated_schema: Dict[str, str]) -> Tuple[DataFrame, List[str]]:
+    """
+    Applies the schema evolution decisions to the DataFrame.
+
+    Args:
+        spark_df (DataFrame): The DataFrame to evolve.
+        decisions (Dict[str, Dict[str, Union[str, str, str]]]): The decisions to apply.
+        updated_schema (Dict[str, str]): The updated schema.
+
+    Returns:
+        Tuple[DataFrame, List[str]]: The evolved DataFrame and a list of migration notes.
+    """
+    migration_notes = []
+    for col, decision in decisions.items():
+        if decision['action'] == 'DROP_SILENTLY':
+            spark_df = spark_df.drop(col)
+        elif decision['action'] == 'ADD_TO_SCHEMA':
+            if col not in spark_df.columns:
+                spark_df = spark_df.withColumn(col, StructField(col, StringType(), nullable=True).dataType)
+        elif decision['action'] == 'FLAG_ANOMALY':
+            spark_df = spark_df.withColumn(f'{col}_anomaly', spark_df[col].isNull().cast('boolean'))
+
+        migration_notes.append(f"{decision['action']} on column '{col}': {decision['reason']}")
+
+    return spark_df, migration_notes
+
+def handle_drift(expected_schema: Dict[str, str], actual_schema: Dict[str, str], spark_df: DataFrame = None) -> Dict[str, Union[Dict[str, Union[Dict[str, Dict[str, Union[str, str, str]]], List[str]]], Dict[str, Union[Dict[str, str], List[str], Dict[str, Tuple[str, str]], str]]]]:
+    """
+    Handles schema drift by detecting, deciding, and applying schema evolution.
+
+    Args:
+        expected_schema (Dict[str, str]): The expected schema.
+        actual_schema (Dict[str, str]): The actual schema.
+        spark_df (DataFrame, optional): The DataFrame to evolve. Defaults to None.
+
+    Returns:
+        Dict[str, Union[Dict[str, Union[Dict[str, Dict[str, Union[str, str, str]]], List[str]]], Dict[str, Union[Dict[str, str], List[str], Dict[str, Tuple[str, str]], str]]]]: The full evolution report.
+    """
+    drift_report = detect_schema_drift(expected_schema, actual_schema)
+    decisions = decide_action(drift_report)
+
+    if spark_df is not None:
+        evolved_df, migration_notes = apply_schema_evolution(spark_df, decisions, actual_schema)
+        drift_report['migration_notes'] = migration_notes
+
+    print("Schema Drift Report:")
+    print(drift_report)
+    return {'drift_report': drift_report, 'decisions': decisions}
+>>>>>>> faed0c6 (day7 done)

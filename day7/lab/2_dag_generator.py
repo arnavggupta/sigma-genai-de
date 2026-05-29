@@ -122,7 +122,8 @@ start_date=datetime(2024, 1, 1), catchup={dag_config['catchup']}"""
     response = bedrock.converse(
         modelId=MODEL_ID,
         system=[{"text": SYSTEM_PROMPT}],
-        messages=[{"role": "user", "content": [{"text": user_prompt}]}],
+        messages=[{"role": "user", "content": [{"text": user_prompt
+                                                }]}],
         inferenceConfig={"maxTokens": 4000, "temperature": 0.3},
     )
 
