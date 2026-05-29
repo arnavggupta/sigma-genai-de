@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: sigma_analytics
+    database: SIGMA_DE
+    schema: PUBLIC
+
+    tables:
+      - name: fact_transactions
+      - name: dim_merchant
+      - name: dim_customer
