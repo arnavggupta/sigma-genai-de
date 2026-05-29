@@ -1,7 +1,7 @@
 version: 2
 
 stg_fact_transactions:
-  source: sigma_analytics
+  source: SIGMA_DE
   table: fact_transactions
   columns:
     transaction_id:

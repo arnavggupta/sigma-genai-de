@@ -1,0 +1,43 @@
+{
+  "file": "queries/query1.sql",
+  "reviewed_at": "2026-05-25T16:02:38.362570",
+  "issues_found": 4,
+  "review": {
+    "issues": [
+      {
+        "severity": "Critical",
+        "category": "Correctness",
+        "title": "Incorrect revenue calculation",
+        "line": "SUM(t.AMOUNT) AS TOTAL_REVENUE",
+        "problem": "The query sums all transaction amounts without filtering for 'COMPLETED' status, which should only include transactions where status = 'COMPLETED'.",
+        "fix": "SUM(CASE WHEN t.STATUS = 'COMPLETED' THEN t.AMOUNT ELSE 0 END) AS TOTAL_REVENUE"
+      },
+      {
+        "severity": "Medium",
+        "category": "Correctness",
+        "title": "Missing filter for failed transactions",
+        "line": "WHERE t.STATUS!= 'FAILED'",
+        "problem": "The query should include a condition to calculate the failure rate, which requires counting failed transactions.",
+        "fix": "WHERE t.STATUS IN ('COMPLETED', 'FAILED')"
+      },
+      {
+        "severity": "Low",
+        "category": "Readability",
+        "title": "Column naming consistency",
+        "line": "m.MERCHANT_NAME, t.AMOUNT, t.STATUS",
+        "problem": "Column names should be consistent in casing (e.g., all uppercase or all lowercase).",
+        "fix": "m.merchant_name, t.amount, t.status"
+      },
+      {
+        "severity": "Medium",
+        "category": "Readability",
+        "title": "Lack of comments",
+        "line": "Entire query",
+        "problem": "The query lacks comments explaining the logic, especially for complex calculations.",
+        "fix": "-- Calculate total revenue for completed transactions\n-- Calculate total transactions\n-- Calculate failure rate"
+      }
+    ],
+    "corrected_sql": "-- Corrected query for testing SQL Review Agent\n\nSELECT\n    m.merchant_name AS MERCHANT_NAME,\n    SUM(CASE WHEN t.status = 'COMPLETED' THEN t.amount ELSE 0 END) AS total_revenue,\n    COUNT(*) AS total_txns,\n    COUNT(CASE WHEN t.status = 'FAILED' THEN 1 ELSE NULL END) * 100.0 / COUNT(*) AS failure_rate\nFROM sigma_analytics.fact_transactions t\nJOIN sigma_analytics.dim_merchant m ON t.merchant_id = m.merchant_id\nWHERE t.status IN ('COMPLETED', 'FAILED')\nGROUP BY m.merchant_name;",
+    "summary": "The query had critical correctness issues with revenue calculation and missing failure rate calculation. Readability was improved by fixing column naming and adding comments."
+  }
+}

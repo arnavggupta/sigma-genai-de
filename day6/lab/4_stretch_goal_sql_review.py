@@ -38,7 +38,7 @@ WHERE THIS FITS:
   Day 10: LangGraph agent calls this as a TOOL autonomously
 
 HOW TO RUN:
-  python stretch_goal_sql_review.py queries/
+  python3 stretch_goal_sql_review.py queries/
 """
 
 import sys

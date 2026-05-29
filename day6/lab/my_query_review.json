@@ -1,0 +1,35 @@
+{
+  "file": "queries/my_query.sql",
+  "reviewed_at": "2026-05-25T16:02:29.786135",
+  "issues_found": 3,
+  "review": {
+    "issues": [
+      {
+        "severity": "Critical",
+        "category": "Correctness",
+        "title": "Incorrect revenue calculation",
+        "line": "SUM(t.AMOUNT) AS TOTAL_REVENUE",
+        "problem": "Revenue should only include transactions with status 'COMPLETED', but the query includes all transactions where status is not 'FAILED'.",
+        "fix": "SUM(CASE WHEN t.STATUS = 'COMPLETED' THEN t.AMOUNT ELSE 0 END) AS TOTAL_REVENUE"
+      },
+      {
+        "severity": "Medium",
+        "category": "Correctness",
+        "title": "Missing filter for 'FAILED' transactions",
+        "line": "WHERE t.STATUS!= 'FAILED'",
+        "problem": "The query does not calculate the failure rate as per the business rule.",
+        "fix": "No fix provided, additional query needed to calculate failure rate."
+      },
+      {
+        "severity": "Low",
+        "category": "Readability",
+        "title": "Inconsistent naming convention",
+        "line": "m.MERCHANT_NAME, t.AMOUNT, t.STATUS, m.MERCHANT_ID",
+        "problem": "The query uses mixed case for column names which can lead to confusion and errors.",
+        "fix": "Use consistent casing, e.g., m.merchant_name, t.amount, t.status, m.merchant_id"
+      }
+    ],
+    "corrected_sql": "SELECT m.merchant_name, SUM(CASE WHEN t.status = 'COMPLETED' THEN t.amount ELSE 0 END) AS total_revenue, COUNT(*) AS total_txns FROM sigma_analytics.fact_transactions t JOIN sigma_analytics.dim_merchant m ON t.merchant_id = m.merchant_id WHERE t.status!= 'FAILED' GROUP BY m.merchant_name;",
+    "summary": "The query has a critical correctness issue with revenue calculation and lacks a failure rate calculation. Readability can be improved with consistent naming."
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "file": "queries/query3.sql",
+  "reviewed_at": "2026-05-25T16:02:49.823016",
+  "issues_found": 3,
+  "review": {
+    "issues": [
+      {
+        "severity": "Critical",
+        "category": "Correctness",
+        "title": "Incorrect total transactions calculation",
+        "line": "8",
+        "problem": "The subquery is incorrectly calculating total transactions for each merchant by using a correlated subquery, which is inefficient and incorrect.",
+        "fix": "Remove the subquery and use COUNT(*) directly."
+      },
+      {
+        "severity": "Medium",
+        "category": "Performance",
+        "title": "Inefficient correlated subquery",
+        "line": "8",
+        "problem": "Using a correlated subquery can be very inefficient as it re-runs for each row.",
+        "fix": "Remove the subquery and use COUNT(*) directly."
+      },
+      {
+        "severity": "Low",
+        "category": "Readability",
+        "title": "Alias consistency",
+        "line": "3, 4, 5, 7, 8, 9, 10",
+        "problem": "The query uses both uppercase and lowercase aliases inconsistently.",
+        "fix": "Use consistent casing for aliases (e.g., always lowercase)."
+      }
+    ],
+    "corrected_sql": "SELECT m.merchant_name, COUNT(*) AS txn_count FROM fact_transactions t JOIN dim_merchant m ON t.merchant_id = m.merchant_id GROUP BY m.merchant_name ORDER BY txn_count DESC;",
+    "summary": "The query had a correctness issue with the total transactions calculation and used an inefficient correlated subquery. It also had readability issues with inconsistent alias casing."
+  }
+}

@@ -123,6 +123,7 @@ def batch_review():
         "queries": {}
     }
 
+
     for name, query_data in BROKEN_QUERIES.items():
         print(f"\n{'-' * 60}")
         print(f"Reviewing: {name}")

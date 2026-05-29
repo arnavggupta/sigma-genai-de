@@ -1,25 +1,25 @@
-WITH filtered_transactions AS (
-    SELECT
-        transaction_id,
-        amount,
-        status,
-        merchant_id,
-        customer_id,
-        transaction_date,
-        payment_method
-    FROM {{ ref('stg_fact_transactions') }}
-    WHERE status IN ('COMPLETED', 'FAILED')
-),
+-- WITH filtered_transactions AS (
+--     SELECT
+--         transaction_id,
+--         amount,
+--         status,
+--         merchant_id,
+--         customer_id,
+--         transaction_date,
+--         payment_method
+--     FROM {{ ref('stg_transactions') }}
+--     WHERE status IN ('COMPLETED', 'FAILED')
+-- ),
 
-merchant_details AS (
-    SELECT
-        merchant_id,
-        merchant_name,
-        category,
-        city,
-        onboarded_date
-    FROM {{ ref('dim_merchant') }}
-),
+-- merchant_details AS (
+--     SELECT
+--         merchant_id,
+--         merchant_name,
+--         category,
+--         city,
+--         onboarded_date
+--     FROM {{ ref('dim_merchant') }}
+-- ),
 
 aggregated_metrics AS (
     SELECT

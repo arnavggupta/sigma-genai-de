@@ -1,0 +1,156 @@
+{
+  "directory": "queries/",
+  "reviewed_at": "2026-05-25T16:02:49.824894",
+  "files_reviewed": 4,
+  "total_issues": 13,
+  "files": [
+    {
+      "file": "queries/my_query.sql",
+      "reviewed_at": "2026-05-25T16:02:29.786135",
+      "issues_found": 3,
+      "review": {
+        "issues": [
+          {
+            "severity": "Critical",
+            "category": "Correctness",
+            "title": "Incorrect revenue calculation",
+            "line": "SUM(t.AMOUNT) AS TOTAL_REVENUE",
+            "problem": "Revenue should only include transactions with status 'COMPLETED', but the query includes all transactions where status is not 'FAILED'.",
+            "fix": "SUM(CASE WHEN t.STATUS = 'COMPLETED' THEN t.AMOUNT ELSE 0 END) AS TOTAL_REVENUE"
+          },
+          {
+            "severity": "Medium",
+            "category": "Correctness",
+            "title": "Missing filter for 'FAILED' transactions",
+            "line": "WHERE t.STATUS!= 'FAILED'",
+            "problem": "The query does not calculate the failure rate as per the business rule.",
+            "fix": "No fix provided, additional query needed to calculate failure rate."
+          },
+          {
+            "severity": "Low",
+            "category": "Readability",
+            "title": "Inconsistent naming convention",
+            "line": "m.MERCHANT_NAME, t.AMOUNT, t.STATUS, m.MERCHANT_ID",
+            "problem": "The query uses mixed case for column names which can lead to confusion and errors.",
+            "fix": "Use consistent casing, e.g., m.merchant_name, t.amount, t.status, m.merchant_id"
+          }
+        ],
+        "corrected_sql": "SELECT m.merchant_name, SUM(CASE WHEN t.status = 'COMPLETED' THEN t.amount ELSE 0 END) AS total_revenue, COUNT(*) AS total_txns FROM sigma_analytics.fact_transactions t JOIN sigma_analytics.dim_merchant m ON t.merchant_id = m.merchant_id WHERE t.status!= 'FAILED' GROUP BY m.merchant_name;",
+        "summary": "The query has a critical correctness issue with revenue calculation and lacks a failure rate calculation. Readability can be improved with consistent naming."
+      }
+    },
+    {
+      "file": "queries/query1.sql",
+      "reviewed_at": "2026-05-25T16:02:38.362570",
+      "issues_found": 4,
+      "review": {
+        "issues": [
+          {
+            "severity": "Critical",
+            "category": "Correctness",
+            "title": "Incorrect revenue calculation",
+            "line": "SUM(t.AMOUNT) AS TOTAL_REVENUE",
+            "problem": "The query sums all transaction amounts without filtering for 'COMPLETED' status, which should only include transactions where status = 'COMPLETED'.",
+            "fix": "SUM(CASE WHEN t.STATUS = 'COMPLETED' THEN t.AMOUNT ELSE 0 END) AS TOTAL_REVENUE"
+          },
+          {
+            "severity": "Medium",
+            "category": "Correctness",
+            "title": "Missing filter for failed transactions",
+            "line": "WHERE t.STATUS!= 'FAILED'",
+            "problem": "The query should include a condition to calculate the failure rate, which requires counting failed transactions.",
+            "fix": "WHERE t.STATUS IN ('COMPLETED', 'FAILED')"
+          },
+          {
+            "severity": "Low",
+            "category": "Readability",
+            "title": "Column naming consistency",
+            "line": "m.MERCHANT_NAME, t.AMOUNT, t.STATUS",
+            "problem": "Column names should be consistent in casing (e.g., all uppercase or all lowercase).",
+            "fix": "m.merchant_name, t.amount, t.status"
+          },
+          {
+            "severity": "Medium",
+            "category": "Readability",
+            "title": "Lack of comments",
+            "line": "Entire query",
+            "problem": "The query lacks comments explaining the logic, especially for complex calculations.",
+            "fix": "-- Calculate total revenue for completed transactions\n-- Calculate total transactions\n-- Calculate failure rate"
+          }
+        ],
+        "corrected_sql": "-- Corrected query for testing SQL Review Agent\n\nSELECT\n    m.merchant_name AS MERCHANT_NAME,\n    SUM(CASE WHEN t.status = 'COMPLETED' THEN t.amount ELSE 0 END) AS total_revenue,\n    COUNT(*) AS total_txns,\n    COUNT(CASE WHEN t.status = 'FAILED' THEN 1 ELSE NULL END) * 100.0 / COUNT(*) AS failure_rate\nFROM sigma_analytics.fact_transactions t\nJOIN sigma_analytics.dim_merchant m ON t.merchant_id = m.merchant_id\nWHERE t.status IN ('COMPLETED', 'FAILED')\nGROUP BY m.merchant_name;",
+        "summary": "The query had critical correctness issues with revenue calculation and missing failure rate calculation. Readability was improved by fixing column naming and adding comments."
+      }
+    },
+    {
+      "file": "queries/query2.sql",
+      "reviewed_at": "2026-05-25T16:02:44.327957",
+      "issues_found": 3,
+      "review": {
+        "issues": [
+          {
+            "severity": "Critical",
+            "category": "Correctness",
+            "title": "Incorrect failure rate calculation",
+            "line": "line 8",
+            "problem": "The failure rate calculation is incorrect because it uses the total count of transactions instead of only completed transactions.",
+            "fix": "SUM(CASE WHEN STATUS = 'COMPLETED' THEN 1 ELSE 0 END)"
+          },
+          {
+            "severity": "Medium",
+            "category": "Readability",
+            "title": "Column aliases should be capitalized",
+            "line": "lines 3-6",
+            "problem": "Column aliases should be capitalized for consistency and readability.",
+            "fix": "COUNT(*) AS total_txns, SUM(CASE WHEN STATUS = 'COMPLETED' THEN 1 ELSE 0 END) AS failed_txns"
+          },
+          {
+            "severity": "Medium",
+            "category": "Readability",
+            "title": "Missing comments on complex logic",
+            "line": "entire query",
+            "problem": "The query lacks comments explaining the logic, especially around the failure rate calculation.",
+            "fix": "-- Calculate failure rate as the percentage of failed completed transactions"
+          }
+        ],
+        "corrected_sql": "-- Payment method performance (corrected)\n\nSELECT \n    PAYMENT_METHOD,\n    COUNT(*) AS total_txns,\n    SUM(CASE WHEN STATUS = 'COMPLETED' THEN 1 ELSE 0 END) AS failed_txns,\n    (SUM(CASE WHEN STATUS = 'COMPLETED' THEN 1 ELSE 0 END) * 100 / COUNT(*)) AS failure_rate\nFROM FACT_TRANSACTIONS\nGROUP BY PAYMENT_METHOD\nHAVING COUNT(*) > 0;",
+        "summary": "The query had a critical correctness issue with the failure rate calculation and some readability issues. The corrected query now accurately calculates the failure rate and includes comments for better readability."
+      }
+    },
+    {
+      "file": "queries/query3.sql",
+      "reviewed_at": "2026-05-25T16:02:49.823016",
+      "issues_found": 3,
+      "review": {
+        "issues": [
+          {
+            "severity": "Critical",
+            "category": "Correctness",
+            "title": "Incorrect total transactions calculation",
+            "line": "8",
+            "problem": "The subquery is incorrectly calculating total transactions for each merchant by using a correlated subquery, which is inefficient and incorrect.",
+            "fix": "Remove the subquery and use COUNT(*) directly."
+          },
+          {
+            "severity": "Medium",
+            "category": "Performance",
+            "title": "Inefficient correlated subquery",
+            "line": "8",
+            "problem": "Using a correlated subquery can be very inefficient as it re-runs for each row.",
+            "fix": "Remove the subquery and use COUNT(*) directly."
+          },
+          {
+            "severity": "Low",
+            "category": "Readability",
+            "title": "Alias consistency",
+            "line": "3, 4, 5, 7, 8, 9, 10",
+            "problem": "The query uses both uppercase and lowercase aliases inconsistently.",
+            "fix": "Use consistent casing for aliases (e.g., always lowercase)."
+          }
+        ],
+        "corrected_sql": "SELECT m.merchant_name, COUNT(*) AS txn_count FROM fact_transactions t JOIN dim_merchant m ON t.merchant_id = m.merchant_id GROUP BY m.merchant_name ORDER BY txn_count DESC;",
+        "summary": "The query had a correctness issue with the total transactions calculation and used an inefficient correlated subquery. It also had readability issues with inconsistent alias casing."
+      }
+    }
+  ]
+}
