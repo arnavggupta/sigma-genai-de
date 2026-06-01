@@ -205,13 +205,36 @@ def apply_fix(failure: dict, diagnosis: dict) -> dict:
         except Exception as e:
             return {"status": "fix_failed", "error": str(e)}
 
+    # elif action == "cast_column_type":
+    #     # TODO: Students implement this
+    #     # Hint: The error says '' (empty string) in amount column
+    #     # Fix: cast to numeric, coerce errors to NaN, then fill NaN with 0 or median
+    #     return {"status": "not_implemented",
+    #             "action": action,
+    #             "message": "TODO: Implement cast_column_type fix (see docstring above)"}
+
     elif action == "cast_column_type":
-        # TODO: Students implement this
-        # Hint: The error says '' (empty string) in amount column
-        # Fix: cast to numeric, coerce errors to NaN, then fill NaN with 0 or median
-        return {"status": "not_implemented",
-                "action": action,
-                "message": "TODO: Implement cast_column_type fix (see docstring above)"}
+        try:
+            # 1. Load the broken dataset
+            df = pd.read_csv(file_path)
+            
+            # 2. Identify the column (hardcoded 'amount' here based on the error context, 
+            # though in production you'd parse this dynamically from the diagnosis)
+            col = "amount"
+            
+            if col in df.columns:
+                # 3. pd.to_numeric with errors='coerce' forces bad strings (like '') into NaN
+                # 4. .fillna(0) replaces those NaNs with a safe default of 0
+                df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
+                
+            # 5. Save the fixed file
+            fixed_path = os.path.join(OUTPUT_DIR, f"fixed_{failure['dataset']}")
+            df.to_csv(fixed_path, index=False)
+            
+            return {"status": "fixed", "action": action, "output_file": fixed_path}
+            
+        except Exception as e:
+            return {"status": "fix_failed", "error": str(e)}
 
     elif action == "escalate_to_human":
         return {"status": "escalated",
