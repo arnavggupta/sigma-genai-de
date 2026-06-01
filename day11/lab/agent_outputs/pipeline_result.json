@@ -1,0 +1,190 @@
+{
+  "pattern": "sequential_pipeline",
+  "timestamp": "2026-06-01T11:56:09.566386",
+  "input_file": {
+    "filename": "transactions_raw.csv",
+    "row_count": 500,
+    "columns": [
+      "transaction_id",
+      "merchant_name",
+      "category",
+      "amount",
+      "currency",
+      "transaction_date",
+      "status",
+      "customer_id",
+      "payment_method",
+      "merchant_city"
+    ],
+    "sample_issues": [
+      "4 blank transaction_ids",
+      "7 null amounts",
+      "3 negative amounts",
+      "2 invalid dates",
+      "1 unknown currency"
+    ]
+  },
+  "stages": [
+    {
+      "completeness_percentage": 95.6,
+      "key_issues": [
+        "4 blank transaction_ids",
+        "7 null amounts",
+        "3 negative amounts",
+        "2 invalid dates",
+        "1 unknown currency"
+      ],
+      "recommended_next_action": "Perform data cleaning to handle blank transaction_ids, null and negative amounts, invalid dates, and unknown currency before proceeding to the next stage.",
+      "pass_to_next": {
+        "filename": "transactions_raw.csv",
+        "row_count": 500,
+        "columns": [
+          "transaction_id",
+          "merchant_name",
+          "category",
+          "amount",
+          "currency",
+          "transaction_date",
+          "status",
+          "customer_id",
+          "payment_method",
+          "merchant_city"
+        ],
+        "sample_issues": [
+          "4 blank transaction_ids",
+          "7 null amounts",
+          "3 negative amounts",
+          "2 invalid dates",
+          "1 unknown currency"
+        ],
+        "completeness_percentage": 95.6
+      },
+      "_stage": "Profile",
+      "_agent": "Profiler Agent",
+      "_timestamp": "2026-06-01T11:56:04.839439"
+    },
+    {
+      "findings": {
+        "blank_transaction_ids": {
+          "description": "There are 4 blank transaction_ids which are critical for uniquely identifying transactions.",
+          "classification": "block-load"
+        },
+        "null_amounts": {
+          "description": "There are 7 null amounts which are essential for financial calculations and reporting.",
+          "classification": "quarantine"
+        },
+        "negative_amounts": {
+          "description": "There are 3 negative amounts which are not valid as transactions cannot have negative amounts.",
+          "classification": "block-load"
+        },
+        "invalid_dates": {
+          "description": "There are 2 invalid dates which can cause issues in time-based analysis.",
+          "classification": "quarantine"
+        },
+        "unknown_currency": {
+          "description": "There is 1 unknown currency which can lead to incorrect currency conversions and financial reporting.",
+          "classification": "quarantine"
+        }
+      },
+      "pass_to_next": {
+        "filename": "transactions_raw.csv",
+        "row_count": 500,
+        "columns": [
+          "transaction_id",
+          "merchant_name",
+          "category",
+          "amount",
+          "currency",
+          "transaction_date",
+          "status",
+          "customer_id",
+          "payment_method",
+          "merchant_city"
+        ],
+        "completeness_percentage": 95.6,
+        "issues_to_address": {
+          "blank_transaction_ids": {
+            "description": "There are 4 blank transaction_ids which are critical for uniquely identifying transactions.",
+            "classification": "block-load"
+          },
+          "null_amounts": {
+            "description": "There are 7 null amounts which are essential for financial calculations and reporting.",
+            "classification": "quarantine"
+          },
+          "negative_amounts": {
+            "description": "There are 3 negative amounts which are not valid as transactions cannot have negative amounts.",
+            "classification": "block-load"
+          },
+          "invalid_dates": {
+            "description": "There are 2 invalid dates which can cause issues in time-based analysis.",
+            "classification": "quarantine"
+          },
+          "unknown_currency": {
+            "description": "There is 1 unknown currency which can lead to incorrect currency conversions and financial reporting.",
+            "classification": "quarantine"
+          }
+        }
+      },
+      "_stage": "Validate",
+      "_agent": "Quality Agent",
+      "_timestamp": "2026-06-01T11:56:07.412101"
+    },
+    {
+      "findings": {
+        "blank_transaction_ids": {
+          "description": "There are 4 blank transaction_ids which are critical for uniquely identifying transactions.",
+          "classification": "block-load"
+        },
+        "null_amounts": {
+          "description": "There are 7 null amounts which are essential for financial calculations and reporting.",
+          "classification": "quarantine"
+        },
+        "negative_amounts": {
+          "description": "There are 3 negative amounts which are not valid as transactions cannot have negative amounts.",
+          "classification": "block-load"
+        },
+        "invalid_dates": {
+          "description": "There are 2 invalid dates which can cause issues in time-based analysis.",
+          "classification": "quarantine"
+        },
+        "unknown_currency": {
+          "description": "There is 1 unknown currency which can lead to incorrect currency conversions and financial reporting.",
+          "classification": "quarantine"
+        }
+      },
+      "load_decision": "rejected",
+      "pass_to_next": {
+        "filename": "transactions_raw.csv",
+        "row_count": 500,
+        "completeness_percentage": 95.6,
+        "issues_to_address": {
+          "blank_transaction_ids": {
+            "description": "There are 4 blank transaction_ids which are critical for uniquely identifying transactions.",
+            "classification": "block-load"
+          },
+          "null_amounts": {
+            "description": "There are 7 null amounts which are essential for financial calculations and reporting.",
+            "classification": "quarantine"
+          },
+          "negative_amounts": {
+            "description": "There are 3 negative amounts which are not valid as transactions cannot have negative amounts.",
+            "classification": "block-load"
+          },
+          "invalid_dates": {
+            "description": "There are 2 invalid dates which can cause issues in time-based analysis.",
+            "classification": "quarantine"
+          },
+          "unknown_currency": {
+            "description": "There is 1 unknown currency which can lead to incorrect currency conversions and financial reporting.",
+            "classification": "quarantine"
+          }
+        }
+      },
+      "_stage": "LoadDecision",
+      "_agent": "Loader Agent",
+      "_timestamp": "2026-06-01T11:56:09.565643"
+    }
+  ],
+  "final_decision": "rejected",
+  "student_judgment": "see if output of a needs in output in b and for c we need b output if one of take time then entire process will take lot of time"
+}
