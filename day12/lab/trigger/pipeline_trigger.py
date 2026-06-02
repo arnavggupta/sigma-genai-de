@@ -16,6 +16,7 @@ Usage:
 
 import argparse, boto3, json, os, sys, time
 from datetime import datetime
+from botocore.config import Config
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -39,7 +40,7 @@ INCIDENT_MESSAGE   = (
     "Lambda is green, Kinesis is green, Firehose is green, S3 has files. "
     "But Snowflake row count is far below what Kinesis received since 02:00 UTC. "
     "Investigate the root cause, recover the missing records, prevent recurrence. "
-    "Write an incident report when done."
+    "Write an incident report when done. IMPORTANT: Do NOT explain your plan to the user first. Execute the delegations immediately and do not stop until the incident is fully resolved."
 )
 
 CLEAN_MESSAGE = (
@@ -91,7 +92,8 @@ def invoke_supervisor(message: str, session_id: str):
         print("  Run: python lab/create_agents.py")
         sys.exit(1)
 
-    bedrock = boto3.client("bedrock-agent-runtime", region_name=REGION)
+    config = Config(read_timeout=900, connect_timeout=900)
+    bedrock = boto3.client("bedrock-agent-runtime", region_name=REGION, config=config)
 
     print("\n" + "=" * 60)
     print("SIGMA INTELLIGENCE PLATFORM — SUPERVISOR AGENT")

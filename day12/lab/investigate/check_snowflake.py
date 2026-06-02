@@ -20,6 +20,7 @@ conn = snowflake.connector.connect(
     database=os.getenv("SNOWFLAKE_DATABASE", "SIGMA"),
     schema=os.getenv("SNOWFLAKE_SCHEMA", "SILVER"),
     warehouse=os.getenv("SNOWFLAKE_WAREHOUSE", "SIGMA_WH"),
+    role="ACCOUNTADMIN",
 )
 
 print("\nSNOWFLAKE — Hourly row count and GMV (last 12 hours)")

@@ -46,7 +46,7 @@ def send_alert(message: str, severity: str, topic_arn: str, region: str) -> dict
     if not topic_arn:
         return {"status": "SKIPPED", "reason": "SNS_TOPIC_ARN not configured"}
     if not message:
-        return {"status": "ERROR", "reason": "Empty message"}
+        message = "Default alert message"
 
     sns     = boto3.client("sns", region_name=region)
     subject = SEVERITY_SUBJECT.get(severity, "[ALERT] Sigma Platform")

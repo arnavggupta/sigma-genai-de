@@ -15,7 +15,21 @@ from datetime import datetime, timezone
 def lambda_handler(event, context):
     params = {p["name"]: p["value"] for p in event.get("parameters", [])}
 
-    records    = json.loads(params.get("records", "[]"))
+    records_str = params.get("records")
+    records_s3_key = params.get("records_s3_key")
+    
+    if records_s3_key:
+        import boto3
+        s3 = boto3.client('s3')
+        bucket = os.getenv("SIGMA_S3_BUCKET", "")
+        if bucket:
+            obj = s3.get_object(Bucket=bucket, Key=records_s3_key)
+            records = json.loads(obj['Body'].read().decode('utf-8'))
+        else:
+            records = []
+    else:
+        records = json.loads(records_str) if records_str else []
+
     table_name = params.get("table_name",
                             f"{os.getenv('SNOWFLAKE_DATABASE','SIGMA')}."
                             f"{os.getenv('SNOWFLAKE_SCHEMA','SILVER')}.TRANSACTIONS")
@@ -126,7 +140,7 @@ def load(records: list, table_name: str) -> dict:
     return {
         "status":        "LOADED",
         "table":         table_name,
-        "rows_attempted": len(records),
+        "rows_attempted": total,
         "rows_loaded":   rows_loaded,
         "rows_skipped":  rows_skipped,
         "loaded_at":     ts,

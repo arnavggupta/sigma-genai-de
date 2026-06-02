@@ -19,7 +19,16 @@ def lambda_handler(event, context):
     max_rows  = int(params.get("max_rows", 500))
 
     if not sql:
-        result = {"error": "No SQL provided"}
+        return {
+            "messageVersion": "1.0",
+            "response": {
+                "actionGroup": event.get("actionGroup"),
+                "function": event.get("function"),
+                "functionResponse": {
+                    "responseBody": {"TEXT": {"body": json.dumps({"error": "No SQL query provided"})}}
+                },
+            },
+        }
     else:
         result = run_query(sql, warehouse, max_rows)
 
@@ -67,7 +76,7 @@ def run_query(sql: str, warehouse: str, max_rows: int) -> dict:
             "truncated": len(rows) == max_rows,
         }
     except Exception as e:
-        return {"error": str(e), "sql": sql}
+        return {"status": "ERROR", "error": str(e), "sql": sql}
 
 
 # ── Preset queries the agents commonly use ────────────────────────────────────

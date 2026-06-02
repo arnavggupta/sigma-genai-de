@@ -1,0 +1,6 @@
+transaction_id,merchant_name,amount,transaction_date,error_reason
+txn-89912,Amazon India,1299.50,2026-06-02 18:00:12,Field mismatch: merchant_nm
+txn-89913,Flipkart,899.00,2026-06-02 18:00:15,Field mismatch: merchant_nm
+txn-89914,Myntra,2499.99,2026-06-02 18:00:20,Field mismatch: merchant_nm
+txn-89915,Swiggy,450.00,2026-06-02 18:00:25,Field mismatch: merchant_nm
+txn-89916,Zomato,850.00,2026-06-02 18:00:30,Field mismatch: merchant_nm

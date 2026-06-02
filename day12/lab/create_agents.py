@@ -44,11 +44,11 @@ TOOLS = {
             "sql": {"description": "SQL query to execute", "required": True, "type": "string"},
         },
     },
-    "get_kinesis_records": {
-        "lambda": "sigma-tool-get-kinesis-records",
-        "description": "Replay records from Kinesis shard from a given timestamp with field remapping applied.",
+    "get_s3_records": {
+        "lambda": "sigma-tool-get-s3-records",
+        "description": "Replay records from S3 Bronze from a given prefix/timestamp with field remapping applied.",
         "parameters": {
-            "start_timestamp": {"description": "ISO timestamp to start replay from", "required": True, "type": "string"},
+            "start_timestamp": {"description": "S3 prefix or ISO timestamp to start replay from", "required": True, "type": "string"},
             "already_loaded_ids": {"description": "Comma-separated transaction_ids already in Snowflake (dedup)", "required": False, "type": "string"},
         },
     },
@@ -73,7 +73,8 @@ TOOLS = {
         "lambda": "sigma-tool-quarantine-rows",
         "description": "Write rejected records to S3 quarantine/ with a reason tag.",
         "parameters": {
-            "records": {"description": "JSON array of records to quarantine", "required": True, "type": "string"},
+            "records": {"description": "JSON array of records to quarantine (optional if records_s3_key is used)", "required": False, "type": "string"},
+            "records_s3_key": {"description": "S3 key for the JSON records file to quarantine", "required": False, "type": "string"},
             "quarantine_reason": {"description": "Reason, e.g. null_transaction_id", "required": True, "type": "string"},
         },
     },
@@ -81,7 +82,8 @@ TOOLS = {
         "lambda": "sigma-tool-load-snowflake",
         "description": "Bulk load records to Snowflake using MERGE INTO on transaction_id (idempotent).",
         "parameters": {
-            "records": {"description": "JSON array of records to load", "required": True, "type": "string"},
+            "records": {"description": "JSON array of records to load (optional if records_s3_key is used)", "required": False, "type": "string"},
+            "records_s3_key": {"description": "S3 key for the JSON records file to load (preferred over records for large payloads)", "required": False, "type": "string"},
         },
     },
     "write_incident_report": {
@@ -104,7 +106,7 @@ TOOLS = {
 AGENT_TOOLS = {
     "ForensicsAgent":      ["check_cloudwatch_metrics", "query_snowflake"],
     "ImpactAgent":         ["query_snowflake"],
-    "RecoveryAgent":       ["get_kinesis_records", "query_snowflake", "quarantine_rows", "load_to_snowflake"],
+    "RecoveryAgent":       ["get_s3_records", "query_snowflake", "quarantine_rows", "load_to_snowflake"],
     "RollbackAgent":       ["rollback_lambda_version", "send_sns_alert"],
     "HardeningAgent":      ["create_cloudwatch_alarm", "send_sns_alert"],
     "IncidentReportAgent": ["write_incident_report", "send_sns_alert"],
@@ -129,7 +131,7 @@ SUB_AGENTS = [
 COLLAB_INSTRUCTIONS = {
     "ForensicsAgent":      "Investigate the pipeline failure root cause. Return structured forensics findings: root cause, failure timestamp, and records gap.",
     "ImpactAgent":         "Calculate business impact of the failure. Query Snowflake for GMV gap and check SLA contracts. Return breach status and notification requirement.",
-    "RecoveryAgent":       "Replay missing records from Kinesis to Snowflake. Only call AFTER RollbackAgent confirms stable. Return rows loaded and quarantine count.",
+    "RecoveryAgent":       "Replay missing records from S3 to Snowflake. Only call AFTER RollbackAgent confirms stable. Return rows loaded and quarantine count.",
     "RollbackAgent":       "Roll back the broken Lambda version. Call BEFORE RecoveryAgent. Return rollback status and whether recovery is cleared to proceed.",
     "HardeningAgent":      "Create 3 CloudWatch alarms based on Forensics findings to prevent recurrence. Return alarm names and creation status.",
     "IncidentReportAgent": "Compile all findings into a CTO-ready post-mortem. Write to S3 and send SNS alert. Return report S3 path.",
@@ -146,7 +148,7 @@ import json
 TOOL_MAP = {
     "check_cloudwatch_metrics": "sigma-tool-check-cloudwatch",
     "query_snowflake":           "sigma-tool-query-snowflake",
-    "get_kinesis_records":       "sigma-tool-get-kinesis-records",
+    "get_s3_records":       "sigma-tool-get-s3-records",
     "rollback_lambda_version":   "sigma-tool-rollback-lambda",
     "create_cloudwatch_alarm":   "sigma-tool-create-alarm",
     "quarantine_rows":           "sigma-tool-quarantine-rows",
@@ -305,8 +307,9 @@ def deploy_dispatcher(lc, role_arn, account_id):
 
 # ── Step 2: Guardrail ───────────────────────────────────────────────────────────
 
-def get_or_create_guardrail(bedrock):
+def get_or_create_guardrail(bedrock_agent_client):
     log("\n[2/9] Setting up Guardrail...")
+    bedrock = boto3.client("bedrock", region_name=REGION)
     resp = bedrock.list_guardrails(maxResults=100)
     for g in resp.get("guardrails", []):
         if g["name"] == "sigma-platform-guardrail":
@@ -341,7 +344,7 @@ def get_or_create_guardrail(bedrock):
 
 # ── Steps 3-8: Sub-agents ───────────────────────────────────────────────────────
 
-def get_or_create_sub_agent(bedrock, name, dispatcher_arn, guardrail_id, account_id):
+def get_or_create_sub_agent(bedrock, name, dispatcher_arn, guardrail_id, account_id, role_arn):
     instructions = (AGENTS_DIR / INSTRUCTION_FILES[name]).read_text()
     tool_names   = AGENT_TOOLS[name]
 
@@ -362,6 +365,7 @@ def get_or_create_sub_agent(bedrock, name, dispatcher_arn, guardrail_id, account
     r = bedrock.create_agent(
         agentName=name,
         foundationModel=MODEL_ID,
+        agentResourceRoleArn=role_arn,
         instruction=instructions,
         description=f"Sigma Intelligence Platform — {name}",
         idleSessionTTLInSeconds=1800,
@@ -397,7 +401,7 @@ def get_or_create_sub_agent(bedrock, name, dispatcher_arn, guardrail_id, account
 
 # ── Step 9: Supervisor ──────────────────────────────────────────────────────────
 
-def get_or_create_supervisor(bedrock, sub_agent_data, dispatcher_arn, guardrail_id, account_id):
+def get_or_create_supervisor(bedrock, sub_agent_data, dispatcher_arn, guardrail_id, account_id, role_arn):
     instructions = (AGENTS_DIR / INSTRUCTION_FILES["SupervisorAgent"]).read_text()
 
     supervisor_id = find_agent_by_name(bedrock, "SupervisorAgent")
@@ -405,6 +409,8 @@ def get_or_create_supervisor(bedrock, sub_agent_data, dispatcher_arn, guardrail_
         r = bedrock.create_agent(
             agentName="SupervisorAgent",
             foundationModel=MODEL_ID,
+            agentResourceRoleArn=role_arn,
+            agentCollaboration="SUPERVISOR",
             instruction=instructions,
             description="Sigma Intelligence Platform — Supervisor",
             idleSessionTTLInSeconds=1800,
@@ -509,7 +515,7 @@ def main():
     for i, name in enumerate(SUB_AGENTS, 3):
         log(f"\n[{i}/9] Creating {name}...")
         agent_id, alias_id, alias_arn = get_or_create_sub_agent(
-            bedrock, name, dispatcher_arn, guardrail_id, account_id
+            bedrock, name, dispatcher_arn, guardrail_id, account_id, role_arn
         )
         sub_agent_data[name] = {
             "id": agent_id, "alias_id": alias_id, "alias_arn": alias_arn
@@ -518,7 +524,7 @@ def main():
     # 9. Supervisor
     log(f"\n[9/9] Creating SupervisorAgent...")
     supervisor_id, supervisor_alias_id = get_or_create_supervisor(
-        bedrock, sub_agent_data, dispatcher_arn, guardrail_id, account_id
+        bedrock, sub_agent_data, dispatcher_arn, guardrail_id, account_id, role_arn
     )
 
     # Write all IDs to .env

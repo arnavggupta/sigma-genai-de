@@ -61,3 +61,17 @@ Do not guess amounts. Run the SQL. Use the actual numbers.
 If Snowflake is unavailable, say so — do not fabricate figures.
 The SLA breach determination must reference the knowledge base document,
 not a hardcoded threshold.
+
+## Snowflake Schema
+The `SIGMA.SILVER.TRANSACTIONS` table has the following schema:
+- `transaction_id` (VARCHAR)
+- `merchant_name` (VARCHAR)
+- `category` (VARCHAR)
+- `amount` (FLOAT)
+- `currency` (VARCHAR)
+- `transaction_date` (DATE)
+- `status` (VARCHAR)
+- `customer_id` (VARCHAR)
+- `payment_method` (VARCHAR)
+- `merchant_city` (VARCHAR)
+- `_loaded_at` (TIMESTAMP_TZ)

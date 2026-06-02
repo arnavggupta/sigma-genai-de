@@ -48,8 +48,7 @@ def investigate(function_name: str, hours_back: int, region: str) -> dict:
         },
         "lambda_version_history": [],
         "lambda_errors":          [],
-        "firehose_failures":      [],
-        "kinesis_throttles":      [],
+        "s3_zero_byte_files":     [],
         "anomaly_window":         None,
         "root_cause_hypothesis":  None,
     }
@@ -95,44 +94,22 @@ def investigate(function_name: str, hours_back: int, region: str) -> dict:
     except Exception as e:
         findings["lambda_errors"] = [{"error": str(e)}]
 
-    # ── Firehose delivery failures ────────────────────────────────────────────
-    stream_name = os.getenv("SIGMA_STREAM", "sigma-transactions")
-    try:
-        resp = cw.get_metric_statistics(
-            Namespace="AWS/Firehose",
-            MetricName="DeliveryToS3.DataFreshness",
-            Dimensions=[{"Name": "DeliveryStreamName",
-                         "Value": f"{stream_name}-firehose"}],
-            StartTime=start, EndTime=now, Period=300,
-            Statistics=["Maximum"],
-        )
-        for dp in sorted(resp["Datapoints"], key=lambda x: x["Timestamp"]):
-            if dp["Maximum"] > 600:    # freshness > 10 minutes = problem
-                findings["firehose_failures"].append({
-                    "timestamp":        dp["Timestamp"].isoformat(),
-                    "freshness_seconds": int(dp["Maximum"]),
-                    "status": "DELAYED" if dp["Maximum"] < 900 else "CRITICAL",
-                })
-    except Exception as e:
-        findings["firehose_failures"] = [{"error": str(e)}]
 
-    # ── Kinesis throttles ─────────────────────────────────────────────────────
+    # ── S3 zero-byte files ────────────────────────────────────────────────────
     try:
-        resp = cw.get_metric_statistics(
-            Namespace="AWS/Kinesis",
-            MetricName="WriteProvisionedThroughputExceeded",
-            Dimensions=[{"Name": "StreamName", "Value": stream_name}],
-            StartTime=start, EndTime=now, Period=300,
-            Statistics=["Sum"],
-        )
-        for dp in sorted(resp["Datapoints"], key=lambda x: x["Timestamp"]):
-            if dp["Sum"] > 0:
-                findings["kinesis_throttles"].append({
-                    "timestamp":     dp["Timestamp"].isoformat(),
-                    "throttle_count": int(dp["Sum"]),
-                })
+        s3 = boto3.client("s3", region_name=region)
+        bucket = os.getenv("SIGMA_S3_BUCKET")
+        if bucket:
+            # Check the disaster bronze folder for zero-byte files
+            resp = s3.list_objects_v2(Bucket=bucket, Prefix="bronze/")
+            for obj in resp.get("Contents", []):
+                if obj["Size"] == 0 and not obj["Key"].endswith("/"):
+                    findings["s3_zero_byte_files"].append({
+                        "filename": obj["Key"],
+                        "timestamp": obj["LastModified"].isoformat()
+                    })
     except Exception as e:
-        findings["kinesis_throttles"] = [{"error": str(e)}]
+        findings["s3_zero_byte_files"] = [{"error": str(e)}]
 
     # ── Synthesise: find the anomaly window ───────────────────────────────────
     # Look for the timestamp where Lambda version changed AND errors appeared
@@ -145,7 +122,7 @@ def investigate(function_name: str, hours_back: int, region: str) -> dict:
         findings["anomaly_window"] = {
             "detected_at": version_change_ts,
             "trigger":     "Lambda version 2 deployed",
-            "correlation": "Lambda v2 deployed → malformed JSON → Firehose delivered → Snowflake loaded 0 rows",
+            "correlation": "Lambda v2 deployed → malformed JSON → delivered to S3 → Snowflake loaded 0 rows",
         }
         findings["root_cause_hypothesis"] = (
             f"Lambda function '{function_name}' was updated to version 2 "

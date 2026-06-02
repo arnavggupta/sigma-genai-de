@@ -15,7 +15,10 @@ from datetime import datetime, timezone
 def lambda_handler(event, context):
     params = {p["name"]: p["value"] for p in event.get("parameters", [])}
 
-    findings = json.loads(params.get("findings", "{}"))
+    try:
+        findings = json.loads(params.get("findings", "{}"))
+    except json.JSONDecodeError:
+        findings = {"forensics": {"root_cause": str(params.get("findings"))}}
     bucket   = params.get("bucket", os.getenv("SIGMA_S3_BUCKET", ""))
     region   = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
 

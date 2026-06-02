@@ -72,6 +72,7 @@ def read_s3_records(bucket: str, prefix: str, already_loaded_ids: list,
     loaded_set    = set(already_loaded_ids)
     raw_records   = []
     fixed_records = []
+    quarantine_records = []
     skipped_ids   = []
 
     for key in files:
@@ -90,14 +91,28 @@ def read_s3_records(bucket: str, prefix: str, already_loaded_ids: list,
                 fixed = fix_record(rec)
                 tid   = fixed.get("transaction_id", "")
 
-                if tid and tid in loaded_set:
+                if not tid or not fixed.get("amount") or fixed.get("amount", 0) <= 0 or not re.match(r"^\d{4}-\d{2}-\d{2}$", str(fixed.get("transaction_date", ""))):
+                    quarantine_records.append(rec)
+                elif tid and tid in loaded_set:
                     skipped_ids.append(tid)
                 else:
                     fixed_records.append(fixed)
-                    if tid:
-                        loaded_set.add(tid)
+                    loaded_set.add(tid)
         except Exception:
             pass   # skip unreadable files
+
+    if fixed_records:
+        s3.put_object(
+            Bucket=bucket,
+            Key="tmp/recovery_records.json",
+            Body=json.dumps(fixed_records)
+        )
+    if quarantine_records:
+        s3.put_object(
+            Bucket=bucket,
+            Key="tmp/quarantine_records.json",
+            Body=json.dumps(quarantine_records)
+        )
 
     return {
         "bucket":             bucket,
@@ -106,7 +121,10 @@ def read_s3_records(bucket: str, prefix: str, already_loaded_ids: list,
         "raw_records_found":  len(raw_records),
         "duplicates_skipped": len(skipped_ids),
         "clean_records":      len(fixed_records),
-        "records":            fixed_records,
+        "quarantine_count":   len(quarantine_records),
+        "records_s3_key":     "tmp/recovery_records.json",
+        "quarantine_s3_key":  "tmp/quarantine_records.json",
+        "note": "Records have been saved to S3 at tmp/recovery_records.json and tmp/quarantine_records.json to bypass context limits. Pass these keys to load_to_snowflake and quarantine_rows.",
         "field_fixes_applied": {
             "merchant_nm_renamed": sum(1 for r in raw_records if "merchant_nm" in r),
             "date_format_fixed":   sum(

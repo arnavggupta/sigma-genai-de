@@ -15,7 +15,20 @@ from datetime import datetime, timezone
 def lambda_handler(event, context):
     params = {p["name"]: p["value"] for p in event.get("parameters", [])}
 
-    records           = json.loads(params.get("records", "[]"))
+    records_str = params.get("records")
+    records_s3_key = params.get("records_s3_key")
+    
+    if records_s3_key:
+        import boto3
+        s3 = boto3.client('s3')
+        bucket = os.getenv("SIGMA_S3_BUCKET", "")
+        if bucket:
+            obj = s3.get_object(Bucket=bucket, Key=records_s3_key)
+            records = json.loads(obj['Body'].read().decode('utf-8'))
+        else:
+            records = []
+    else:
+        records = json.loads(records_str) if records_str else []
     quarantine_reason = params.get("quarantine_reason", "failed_quality_check")
     source_context    = params.get("source_context", "kinesis_replay")
     bucket            = params.get("bucket", os.getenv("SIGMA_S3_BUCKET", ""))
