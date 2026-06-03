@@ -1,0 +1,137 @@
+{
+  "mystery_folder": "sigma_datatech",
+  "industry_analysis": {
+    "industry": "Sigma DataTech \u2014 Fintech payments platform",
+    "what_they_do": "Processes merchant transactions in India. Tracks GMV, SLA breaches, and customer payments.",
+    "top_clues": [
+      "merchant_name",
+      "transaction_id",
+      "gmv_inr"
+    ],
+    "confidence": "HIGH"
+  },
+  "generated_at": "2026-06-03T06:51:08.703322+00:00",
+  "tables": {
+    "stg_transactions": {
+      "source_tables": [
+        "fact_transactions"
+      ],
+      "column_lineage": [
+        {
+          "target_column": "transaction_id",
+          "source_table": "fact_transactions",
+          "source_column": "transaction_id",
+          "transformation": "LOWER"
+        },
+        {
+          "target_column": "amount",
+          "source_table": "fact_transactions",
+          "source_column": "amount",
+          "transformation": "CAST to DECIMAL(10, 2)"
+        },
+        {
+          "target_column": "status",
+          "source_table": "fact_transactions",
+          "source_column": "status",
+          "transformation": "LOWER"
+        },
+        {
+          "target_column": "merchant_id",
+          "source_table": "fact_transactions",
+          "source_column": "merchant_id",
+          "transformation": "LOWER"
+        },
+        {
+          "target_column": "customer_id",
+          "source_table": "fact_transactions",
+          "source_column": "customer_id",
+          "transformation": "LOWER"
+        },
+        {
+          "target_column": "transaction_date",
+          "source_table": "fact_transactions",
+          "source_column": "transaction_date",
+          "transformation": "CAST to DATE"
+        },
+        {
+          "target_column": "payment_method",
+          "source_table": "fact_transactions",
+          "source_column": "payment_method",
+          "transformation": "LOWER"
+        },
+        {
+          "target_column": "loaded_at",
+          "source_table": "",
+          "source_column": "",
+          "transformation": "direct"
+        }
+      ],
+      "pii_columns": [
+        {
+          "column": "customer_id",
+          "pii_type": "GOV_ID",
+          "severity": "HIGH",
+          "real_world_risk": "If leaked, it could lead to identity theft and unauthorized access to personal accounts."
+        },
+        {
+          "column": "merchant_id",
+          "pii_type": "GOV_ID",
+          "severity": "MEDIUM",
+          "real_world_risk": "If leaked, it could lead to unauthorized access to merchant accounts and potential fraud."
+        }
+      ],
+      "business_description": "This model cleans and prepares transaction data for further transformation and analysis. It ensures data consistency and filters out test data.",
+      "who_should_access": "Data Analysts, Data Engineers, Compliance Officers",
+      "who_should_NOT_access": "Marketing Team, General Public",
+      "sensitivity_level": "INTERNAL",
+      "governance_flag": "Ensure proper access controls are in place to protect PII data.",
+      "model_name": "stg_transactions",
+      "sql_lines": 69,
+      "analysed_at": "2026-06-03T06:51:12.145546+00:00"
+    }
+  },
+  "three_questions": {
+    "q1_most_damaging_column": {
+      "column": "stg_transactions.customer_id",
+      "why": "The 'customer_id' column contains government-issued IDs, which, if leaked, could lead to identity theft and unauthorized access to personal accounts. This makes it the most damaging column in terms of potential harm to individuals."
+    },
+    "q2_hacker_target_table": {
+      "table": "stg_transactions",
+      "why": "If a hacker gains SELECT access to the'stg_transactions' table, they could extract sensitive transaction data, including customer and merchant IDs, transaction amounts, and dates. This could be used for identity theft, financial fraud, and unauthorized access to accounts.",
+      "damage_estimate": "significant harm"
+    },
+    "q3_europe_expansion": {
+      "columns_needing_consent": [
+        "stg_transactions.customer_id",
+        "stg_transactions.merchant_id"
+      ],
+      "why": "Both 'customer_id' and 'merchant_id' contain personal identifiers that are subject to GDPR regulations. These columns specifically require consent because they hold sensitive personal information that needs explicit permission to be processed.",
+      "columns_already_compliant": [
+        "stg_transactions.loaded_at (no PII data)"
+      ]
+    }
+  },
+  "pii_surface_area": [
+    {
+      "table": "stg_transactions",
+      "column": "customer_id",
+      "pii_type": "GOV_ID",
+      "severity": "HIGH",
+      "risk": "If leaked, it could lead to identity theft and unauthorized access to personal accounts."
+    },
+    {
+      "table": "stg_transactions",
+      "column": "merchant_id",
+      "pii_type": "GOV_ID",
+      "severity": "MEDIUM",
+      "risk": "If leaked, it could lead to unauthorized access to merchant accounts and potential fraud."
+    }
+  ],
+  "summary": {
+    "total_tables": 1,
+    "total_pii_columns": 2,
+    "critical_columns": 0,
+    "high_columns": 1,
+    "analysis_seconds": 5.7
+  }
+}
